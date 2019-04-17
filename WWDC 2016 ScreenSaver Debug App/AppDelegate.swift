@@ -19,7 +19,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
 
-        guard let bundleURL = Bundle.main().urlForResource("WWDC 2016 ScreenSaver", withExtension: "saver") else {
+        guard let bundleURL = Bundle.main.url(forResource: "WWDC 2016 ScreenSaver", withExtension: "saver") else {
             return assertionFailure("Couldn't load screen saver bundle")
         }
 
@@ -31,7 +31,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return assertionFailure("Couldn't find a principal class")
         }
         
-        window.setFrame(NSMakeRect(0, 0, NSScreen.main()?.frame.size.width ?? 900, NSScreen.main()?.frame.size.height ?? 600), display:true)
+        window.setFrame(NSMakeRect(0, 0, NSScreen.main?.frame.size.width ?? 900, NSScreen.main?.frame.size.height ?? 600), display:true)
 
         let screenSaverView = screenSaverClass.init(frame: CGRect(), isPreview: true)
 
