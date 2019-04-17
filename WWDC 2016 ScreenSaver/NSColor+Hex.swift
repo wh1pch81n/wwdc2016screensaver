@@ -37,11 +37,11 @@ extension NSColor {
 
 extension String {
     subscript (i: Int) -> String {
-        return String(Array(self.characters)[i])
+        return String(Array(self)[i])
     }
     func substring(r: Range<Int>) -> String {
-        let start = characters.index(startIndex, offsetBy: r.lowerBound)
-        let end = characters.index(startIndex, offsetBy: r.upperBound)
+        let start = self.index(startIndex, offsetBy: r.lowerBound)
+        let end = self.index(startIndex, offsetBy: r.upperBound)
         return substring(with: start..<end)
     }
 }
