@@ -25,9 +25,11 @@ extension Array {
     @discardableResult
     mutating func shuffle() -> Array {
         indices.dropLast().forEach({
-            guard case let index = Int(arc4random_uniform(UInt32(count - $0))) + $0
-                where index != $0 else { return }
-            swap(&self[$0], &self[index])
+            guard case let index = Int(arc4random_uniform(UInt32(count - $0))) + $0,
+                index != $0 else {
+                    return
+            }
+            self.swapAt($0, index)
         })
         return self
     }
@@ -47,12 +49,12 @@ class WWDC2016ScreenSaverView: ScreenSaverView {
     var textLayers: [CATextLayer] = []
     
     lazy var font: NSFont = {
-        let bundle = Bundle(for: self.dynamicType)
-        let fontURL = bundle.urlForResource("SFMono-Regular", withExtension: "otf")!
+        let bundle = Bundle(for: type(of: self))
+        let fontURL = bundle.url(forResource: "SFMono-Regular", withExtension: "otf")!
         
-        let provider = CGDataProvider(url: fontURL)!
+        let provider = CGDataProvider(url: fontURL as CFURL)!
         let fontRef = CGFont(provider)
-        return CTFontCreateWithGraphicsFont(fontRef, WWDC2016ScreenSaverView.fontSize, nil, nil)
+        return CTFontCreateWithGraphicsFont(fontRef!, WWDC2016ScreenSaverView.fontSize, nil, nil)
     }()
     
     let words = [":", ";", "\\", "/", ".", "!", "?",
@@ -107,9 +109,9 @@ class WWDC2016ScreenSaverView: ScreenSaverView {
         
         while true {
 
-            let attributes: [String: AnyObject] = [NSFontAttributeName: font]
+            let attributes: [String: AnyObject] = [convertFromNSAttributedStringKey(NSAttributedString.Key.font): font]
             
-            let boundingRect = (" " as NSString).boundingRect(with: drawingRect.size, options: NSStringDrawingOptions.usesLineFragmentOrigin, attributes: attributes)
+            let boundingRect = (" " as NSString).boundingRect(with: drawingRect.size, options: NSString.DrawingOptions.usesLineFragmentOrigin, attributes: convertToOptionalNSAttributedStringKeyDictionary(attributes))
             
             let percentage = percentageOfBlackPixels(CGRect(origin: point, size: boundingRect.size))
             
@@ -119,7 +121,7 @@ class WWDC2016ScreenSaverView: ScreenSaverView {
                 textLayer.font = font
                 textLayer.foregroundColor = backgroundColor.cgColor
                 textLayer.fontSize = 13.0
-                textLayer.contentsScale = NSScreen.main()!.backingScaleFactor
+                textLayer.contentsScale = NSScreen.main!.backingScaleFactor
                 textLayer.bounds = CGRect(origin: CGPoint(x: 0, y: 0), size: boundingRect.size)
                 textLayer.position = drawingPoint
                 layer.addSublayer(textLayer)
@@ -140,12 +142,12 @@ class WWDC2016ScreenSaverView: ScreenSaverView {
     }
     
     func buildMaskImage() {
-        let bundle = Bundle(for: self.dynamicType)
-        let imageURL = bundle.urlForResource("logo_outline", withExtension: "png")!
+        let bundle = Bundle(for: type(of: self))
+        let imageURL = bundle.url(forResource: "logo_outline", withExtension: "png")!
         
         self.maskImage = NSImage(contentsOf: imageURL)!
         
-        let provider = CGDataProvider(url: imageURL)!
+        let provider = CGDataProvider(url: imageURL as CFURL)!
         let image = CGImage(pngDataProviderSource: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
         self.maskImageRef = image
     }
@@ -159,7 +161,7 @@ class WWDC2016ScreenSaverView: ScreenSaverView {
                                             bitsPerComponent: bitsPerComponent, bytesPerRow: bytesPerRow, space: colorSpace!, bitmapInfo: bitmapInfo.rawValue)
         
         context!.interpolationQuality = CGInterpolationQuality.high
-        context!.draw(in: CGRect(origin: CGPoint.zero, size: size), image: image)
+        context!.draw(image, in: CGRect(origin: CGPoint.zero, size: size))
         return context!.makeImage()!
     }
     
@@ -257,11 +259,22 @@ class WWDC2016ScreenSaverView: ScreenSaverView {
         tick()
     }
     
-    override func hasConfigureSheet() -> Bool {
+    override var hasConfigureSheet: Bool {
         return false
     }
     
-    override func configureSheet() -> NSWindow? {
+    override var configureSheet: NSWindow? {
         return nil
     }
+}
+
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertFromNSAttributedStringKey(_ input: NSAttributedString.Key) -> String {
+	return input.rawValue
+}
+
+// Helper function inserted by Swift 4.2 migrator.
+fileprivate func convertToOptionalNSAttributedStringKeyDictionary(_ input: [String: Any]?) -> [NSAttributedString.Key: Any]? {
+	guard let input = input else { return nil }
+	return Dictionary(uniqueKeysWithValues: input.map { key, value in (NSAttributedString.Key(rawValue: key), value)})
 }
